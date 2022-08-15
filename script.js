@@ -4,9 +4,10 @@
 // -- launch_year, mission_name, rocket -> rocket_name, flight_number
 // Добавить клиентскую сортировку по клику на заголовок mission_name
 const url = "https://api.spacexdata.com/v3/launches";
+
 async function get() {
   const result = await fetch(url);
-  return result.json();
+  let json = result.json();
+  console.log(json);
 }
-const res = get();
-console.log(res);
+get();
