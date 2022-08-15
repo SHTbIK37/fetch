@@ -7,5 +7,25 @@
     <title>Document</title>
     <script src="./script.js"></script>
   </head>
-  <body></body>
+
+  <body>
+    <table id="table">
+      <tr>
+        <td>launch year</td>
+        <td id="sort">mission name</td>
+        <td>rocket name</td>
+        <td>flight number</td>
+      </tr>
+      <tr>
+        <td>asd</td>
+      </tr>
+      <tr></tr>
+    </table>
+  </body>
+  <script>
+    let tr = document.createElement("tr");
+    tr.innerHTML = "text";
+    const table = document.querySelector("#table");
+    table.append(tr);
+  </script>
 </html>
