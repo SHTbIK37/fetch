@@ -11,8 +11,17 @@ async function get() {
   console.log(json);
   return json;
 }
-let res = get();
-res.then(function (result) {
-  for (let i = 0; i < 20; i++) console.log(result[i].flight_number);
-  console.log(result);
-});
+
+// function addelement() {
+//   res.then(function (result) {
+//     for (let i = 0; i < 20; i++) console.log(result[i].flight_number);
+//     console.log(result);
+//   });
+// }
+// let res = get();
+// addelement();
+
+// let tr = document.createElement("tr");
+// tr.innerHTML = "text";
+// const table = document.querySelector("#table");
+// table.append(tr);
