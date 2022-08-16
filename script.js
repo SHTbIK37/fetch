@@ -9,5 +9,10 @@ async function get() {
   const result = await fetch(url);
   let json = result.json();
   console.log(json);
+  return json;
 }
-get();
+let res = get();
+res.then(function (result) {
+  for (let i = 0; i < 20; i++) console.log(result[i].flight_number);
+  console.log(result);
+});
