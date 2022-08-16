@@ -5,7 +5,6 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
-    <script src="./script.js"></script>
   </head>
 
   <body>
@@ -17,37 +16,6 @@
         <td>flight number</td>
       </tr>
     </table>
+    <script src="./script.js"></script>
   </body>
-  <script>
-    // let tr = document.createElement("tr");
-    // tr.innerHTML = "text";
-    // const table = document.querySelector("#table");
-    // table.append(tr);
-
-    function addelement() {
-      res.then(function (result) {
-        let id = document.getElementById("table");
-        console.log(id);
-        for (let i = 0; i < 20; i++) {
-          let newstring = document.createElement("tr");
-          newstring.setAttribute("id", "tr");
-          id.append(newstring);
-          let year = document.createElement("td");
-          year.innerHTML = result[i].launch_year;
-          newstring.append(year);
-          let mission = document.createElement("td");
-          mission.innerHTML = result[i].mission_name;
-          newstring.append(mission);
-          let rocket = document.createElement("td");
-          rocket.innerHTML = result[i].rocket.rocket_name;
-          newstring.append(rocket);
-          let number = document.createElement("td");
-          number.innerHTML = result[i].flight_number;
-          newstring.append(number);
-        }
-      });
-    }
-    let res = get();
-    addelement();
-  </script>
 </html>

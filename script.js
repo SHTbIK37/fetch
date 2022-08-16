@@ -3,25 +3,46 @@
 // и построить таблицу с полученными данными
 // -- launch_year, mission_name, rocket -> rocket_name, flight_number
 // Добавить клиентскую сортировку по клику на заголовок mission_name
-const url = "https://api.spacexdata.com/v3/launches";
+// добавить состояние загрузки - loading...
+// добавить состояние ошибки - вывести пользователю
 
-async function get() {
-  const result = await fetch(url);
-  let json = result.json();
-  console.log(json);
-  return json;
-}
+(async function () {
+  const spaceXUrl = "https://api.spacexdata.com/v3/launches?limit=20";
 
-// function addelement() {
-//   res.then(function (result) {
-//     for (let i = 0; i < 20; i++) console.log(result[i].flight_number);
-//     console.log(result);
-//   });
-// }
-// let res = get();
-// addelement();
+  try {
+    const launches = await getLaunches();
+    for (let i = 0; i < launches.length; i++) {
+      addLaunch(launches[i]);
+    }
+  } catch (error) {
+    console.error("MY ERROR", error);
+  }
+  let columnHeader = document.getElementById("sort");
+  columnHeader.addEventListener("click", sort);
 
-// let tr = document.createElement("tr");
-// tr.innerHTML = "text";
-// const table = document.querySelector("#table");
-// table.append(tr);
+  // *****************************************
+
+  async function getLaunches() {
+    const result = await fetch(spaceXUrl);
+    return result.json();
+  }
+
+  function addLaunch(launch) {
+    let tableElem = document.getElementById("table");
+    let newstring = document.createElement("tr");
+    newstring.setAttribute("id", "tr");
+    tableElem.append(newstring);
+    let year = document.createElement("td");
+    year.innerHTML = launch.launch_year;
+    newstring.append(year);
+    let mission = document.createElement("td");
+    mission.innerHTML = launch.mission_name;
+    newstring.append(mission);
+    let rocket = document.createElement("td");
+    rocket.innerHTML = launch.rocket.rocket_name;
+    newstring.append(rocket);
+    let number = document.createElement("td");
+    number.innerHTML = launch.flight_number;
+    newstring.append(number);
+  }
+})();
