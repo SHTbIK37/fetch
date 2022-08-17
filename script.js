@@ -11,6 +11,8 @@
   const spaceXUrl = "https://api.spacexdata.com/v3/launches?limit=20";
   const spaceXUrlSort =
     "https://api.spacexdata.com/v3/launches?limit=20&sort=mission_name";
+  let spaceXUrlSpecial =
+    "https://api.spacexdata.com/v3/launches?limit=20&offset=";
   let launches;
   showLoading();
   try {
@@ -23,11 +25,75 @@
   }
   let columnHeader = document.getElementById("sort");
   columnHeader.addEventListener("click", sort);
+
   let columnHeader2 = document.getElementById("sort2");
   columnHeader2.addEventListener("click", sortServer);
 
-  // *****************************************
+  let buttonBack = document.getElementById("back");
+  buttonBack.addEventListener("click", back);
 
+  let buttonForward = document.getElementById("forward");
+  buttonForward.addEventListener("click", forward);
+
+  let buttonStart = document.getElementById("start");
+  buttonStart.addEventListener("click", start);
+
+  let activePage;
+  let minPage;
+  let maxPage;
+  let position;
+  let SpecialLaunches;
+  // *****************************************
+  async function start() {
+    deleteRows();
+    showLoading();
+    try {
+      SpecialLaunches = await getLaunches(
+        "https://api.spacexdata.com/v3/launches"
+      );
+      maxPage = Math.ceil(SpecialLaunches.length / 20);
+      activePage = 1;
+      minPage = 1;
+      position = 0;
+      SpecialLaunches = await getLaunches(spaceXUrlSpecial + position);
+      hideLoading();
+      createTable(SpecialLaunches);
+    } catch (error) {
+      showError(error);
+    }
+  }
+  async function forward() {
+    if (activePage == maxPage || activePage > maxPage) {
+    } else {
+      try {
+        deleteRows();
+        showLoading();
+        position += 20;
+        activePage += 1;
+        SpecialLaunches = await getLaunches(spaceXUrlSpecial + position);
+        hideLoading();
+        createTable(SpecialLaunches);
+      } catch (error) {
+        showError(error);
+      }
+    }
+  }
+  async function back() {
+    if (activePage == minPage || activePage < 0) {
+    } else {
+      try {
+        deleteRows();
+        showLoading();
+        position -= 20;
+        activePage -= 1;
+        SpecialLaunches = await getLaunches(spaceXUrlSpecial + position);
+        hideLoading();
+        createTable(SpecialLaunches);
+      } catch (error) {
+        showError(error);
+      }
+    }
+  }
   async function sortServer() {
     deleteRows();
     showLoading();
