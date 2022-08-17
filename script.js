@@ -6,33 +6,46 @@
 // добавить состояние загрузки - loading... +
 // добавить состояние ошибки - вывести пользователю +
 // сортировка готова проблема что я вынес launches в глобал
-
+// 3500 поддон и герметк
 (async function () {
   const spaceXUrl = "https://api.spacexdata.com/v3/launches?limit=20";
+  const spaceXUrlSort =
+    "https://api.spacexdata.com/v3/launches?limit=20&sort=mission_name";
   let launches;
   showLoading();
   try {
-    launches = await getLaunches();
+    launches = await getLaunches(spaceXUrl);
     hideLoading();
-    createTable();
+    createTable(launches);
   } catch (error) {
     hideLoading();
     showError(error);
   }
   let columnHeader = document.getElementById("sort");
   columnHeader.addEventListener("click", sort);
+  let columnHeader2 = document.getElementById("sort2");
+  columnHeader2.addEventListener("click", sort2);
 
   // *****************************************
 
-  function createTable() {
-    for (let i = 0; i < launches.length; i++) {
-      addLaunch(launches[i]);
+  async function sort2() {
+    try {
+      let launchesSortServer = await getLaunches(spaceXUrlSort);
+      deleteRows();
+      createTable(launchesSortServer);
+    } catch (error) {
+      showError(error);
+    }
+  }
+  function createTable(launch) {
+    for (let i = 0; i < launch.length; i++) {
+      addLaunch(launch[i]);
     }
   }
 
   function deleteRows() {
     let table = document.getElementById("table");
-    let firstRow = table.rows.length;
+
     for (let i = table.rows.length - 1; i > 0; i--) {
       let time = table.rows[i];
       table.removeChild(time);
@@ -54,7 +67,7 @@
   function sort() {
     deleteRows();
     bubbleSortConcept();
-    createTable();
+    createTable(launches);
   }
 
   function showError(error) {
@@ -73,8 +86,8 @@
     document.body.removeChild(removeElem);
   }
 
-  async function getLaunches() {
-    const result = await fetch(spaceXUrl);
+  async function getLaunches(url) {
+    const result = await fetch(url);
     return result.json();
   }
 
