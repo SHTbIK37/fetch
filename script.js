@@ -24,16 +24,19 @@
   let columnHeader = document.getElementById("sort");
   columnHeader.addEventListener("click", sort);
   let columnHeader2 = document.getElementById("sort2");
-  columnHeader2.addEventListener("click", sort2);
+  columnHeader2.addEventListener("click", sortServer);
 
   // *****************************************
 
-  async function sort2() {
+  async function sortServer() {
+    deleteRows();
+    showLoading();
     try {
       let launchesSortServer = await getLaunches(spaceXUrlSort);
-      deleteRows();
       createTable(launchesSortServer);
+      hideLoading();
     } catch (error) {
+      hideLoading();
       showError(error);
     }
   }
