@@ -8,7 +8,7 @@
 // сортировка готова проблема что я вынес launches в глобал
 //
 // заменить клиентскую сортировку серверной +
-// добавить порядок сортировки (order), показывать вверх-вниз стрелка
+// добавить порядок сортировки (order), показывать вверх-вниз стрелка +
 // убрать стартбутон, кнопка бэк по умолчанию выкл (disabled), по клику вперед делать запрос,
 // если запрос приходит с 0 элементами - откл вперед (значит элементов больше нет), но если нажать назад кнопка вперед снова активна
 // вывести промежуток показываемых элементов между вперед назад (1-20 21-40)
@@ -25,7 +25,7 @@
   let maxPage;
   let position;
   let specialLaunches;
-
+  let desc = 0;
   let columnHeader = document.getElementById("sort");
   columnHeader.addEventListener("click", sortServer);
 
@@ -35,8 +35,8 @@
   let buttonForward = document.getElementById("forward");
   buttonForward.addEventListener("click", forward);
 
-  let buttonStart = document.getElementById("start");
-  buttonStart.addEventListener("click", start);
+  // let buttonStart = document.getElementById("start");
+  // buttonStart.addEventListener("click", start);
 
   showLoading();
   try {
@@ -98,19 +98,73 @@
       }
     }
   }
+  function createArrowUp() {
+    const tableElem = document.getElementById("sort");
+    const arrow = document.createElement("p");
+    arrow.setAttribute("id", "arrowUp");
+    arrow.innerHTML = "&uarr;";
+    tableElem.append(arrow);
+  }
+  function createArrowDown() {
+    const tableElem = document.getElementById("sort");
+    const arrow = document.createElement("p");
+    arrow.setAttribute("id", "arrowDown");
+    arrow.innerHTML = "&darr;";
+    tableElem.append(arrow);
+  }
+  function deleteArrowUp() {
+    const tableElem = document.getElementById("sort");
+    const arrow = document.getElementById("arrowUp");
+    tableElem.removeChild(arrow);
+  }
+  function deleteArrowDown() {
+    const tableElem = document.getElementById("sort");
+    const arrow = document.getElementById("arrowDown");
+    tableElem.removeChild(arrow);
+  }
   async function sortServer() {
-    deleteRows();
-    showLoading();
-    try {
-      let launchesSortServer = await getLaunches({
-        limit,
-        sort: "mission_name",
-      });
-      createTable(launchesSortServer);
-      hideLoading();
-    } catch (error) {
-      hideLoading();
-      showError(error);
+    if (desc == 1) {
+      const alive = document.getElementById("arrowDown");
+      if (alive) {
+        deleteArrowDown();
+      }
+      desc = 0;
+      deleteRows();
+      showLoading();
+      try {
+        let launchesSortServer = await getLaunches({
+          limit,
+          sort: "mission_name",
+          order: "desc",
+        });
+        createTable(launchesSortServer);
+        createArrowUp();
+        hideLoading();
+      } catch (error) {
+        hideLoading();
+        showError(error);
+      }
+    } else {
+      const alive = document.getElementById("arrowUp");
+      if (alive) {
+        deleteArrowUp();
+      }
+      desc = 1;
+      deleteRows();
+      showLoading();
+      try {
+        let launchesSortServer = await getLaunches({
+          limit,
+          sort: "mission_name",
+          order: "asc",
+        });
+        createTable(launchesSortServer);
+        createArrowDown();
+        hideLoading();
+      } catch (error) {
+        hideLoading();
+        showError(error);
+      }
     }
   }
   function createTable(launches) {
