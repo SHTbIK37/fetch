@@ -9,9 +9,9 @@
 //
 // заменить клиентскую сортировку серверной +
 // добавить порядок сортировки (order), показывать вверх-вниз стрелка +
-// убрать стартбутон, кнопка бэк по умолчанию выкл (disabled), по клику вперед делать запрос,
-// если запрос приходит с 0 элементами - откл вперед (значит элементов больше нет), но если нажать назад кнопка вперед снова активна
-// вывести промежуток показываемых элементов между вперед назад (1-20 21-40)
+// убрать стартбутон, кнопка бэк по умолчанию выкл (disabled), по клику вперед делать запрос, +
+// если запрос приходит с 0 элементами - откл вперед (значит элементов больше нет), но если нажать назад кнопка вперед снова активна +
+// вывести промежуток показываемых элементов между вперед назад (1-20 21-40) +
 
 (async function () {
   const limit = 20;
@@ -20,28 +20,25 @@
   // let spaceXUrlOffset =
   //   "https://api.spacexdata.com/v3/launches?limit=20&offset=";
   let launches;
-  let activePage;
-  let minPage;
-  let maxPage;
-  let position;
+  let position = 0;
   let specialLaunches;
-  let desc = 0;
+  let desc;
+
   let columnHeader = document.getElementById("sort");
   columnHeader.addEventListener("click", sortServer);
 
   let buttonBack = document.getElementById("back");
   buttonBack.addEventListener("click", back);
+  buttonBack.setAttribute("disabled", "disabled");
 
   let buttonForward = document.getElementById("forward");
   buttonForward.addEventListener("click", forward);
-
-  // let buttonStart = document.getElementById("start");
-  // buttonStart.addEventListener("click", start);
 
   showLoading();
   try {
     launches = await getLaunches({ limit });
     createTable(launches);
+    showNumbers(launches);
   } catch (error) {
     showError(error);
   } finally {
@@ -49,54 +46,96 @@
   }
 
   // *****************************************
-
-  async function start() {
-    deleteRows();
-    showLoading();
+  async function checkDesc() {}
+  async function forward() {
     try {
-      specialLaunches = await getLaunches({});
-      maxPage = Math.ceil(specialLaunches.length / 20);
-      activePage = 1;
-      minPage = 1;
-      position = 0;
-      specialLaunches = await getLaunches({ limit, offset: position });
+      deleteRows();
+      showLoading();
+      position += 20;
+      if (desc == 1) {
+        specialLaunches = await getLaunches({
+          limit,
+          offset: position,
+          order: "asc",
+          sort: "mission_name",
+        });
+      } else {
+        if (desc == 0) {
+          specialLaunches = await getLaunches({
+            limit,
+            offset: position,
+            order: "desc",
+            sort: "mission_name",
+          });
+        }
+      }
+      if (desc == undefined) {
+        specialLaunches = await getLaunches({ limit, offset: position });
+        showNumbers(specialLaunches);
+      } else {
+        showSort();
+      }
+      if (specialLaunches.length < limit) {
+        buttonForward.setAttribute("disabled", "disabled");
+      }
       hideLoading();
       createTable(specialLaunches);
+      buttonBack.removeAttribute("disabled");
     } catch (error) {
       showError(error);
     }
   }
-  async function forward() {
-    if (activePage == maxPage || activePage > maxPage) {
-    } else {
-      try {
-        deleteRows();
-        showLoading();
-        position += 20;
-        activePage += 1;
-        specialLaunches = await getLaunches({ limit, offset: position });
-        hideLoading();
-        createTable(specialLaunches);
-      } catch (error) {
-        showError(error);
+
+  async function back() {
+    try {
+      deleteRows();
+      showLoading();
+      position -= 20;
+      if (desc == 1) {
+        specialLaunches = await getLaunches({
+          limit,
+          offset: position,
+          order: "asc",
+          sort: "mission_name",
+        });
+      } else {
+        if (desc == 0) {
+          specialLaunches = await getLaunches({
+            limit,
+            offset: position,
+            order: "desc",
+            sort: "mission_name",
+          });
+        }
       }
+      if (desc == undefined) {
+        specialLaunches = await getLaunches({ limit, offset: position });
+        showNumbers(specialLaunches);
+      } else {
+        showSort();
+      }
+      if (position == 0) {
+        buttonBack.setAttribute("disabled", "disabled");
+      }
+      hideLoading();
+      createTable(specialLaunches);
+      buttonForward.removeAttribute("disabled");
+    } catch (error) {
+      showError(error);
     }
   }
-  async function back() {
-    if (activePage == minPage || activePage < 0) {
-    } else {
-      try {
-        deleteRows();
-        showLoading();
-        position -= 20;
-        activePage -= 1;
-        specialLaunches = await getLaunches({ limit, offset: position });
-        hideLoading();
-        createTable(specialLaunches);
-      } catch (error) {
-        showError(error);
-      }
-    }
+
+  function showSort() {
+    const numbers = document.getElementById("numbers");
+    let string = `sort by mission name`;
+    numbers.innerHTML = string;
+  }
+  function showNumbers(specialLaunches) {
+    const numbers = document.getElementById("numbers");
+    let string = `${specialLaunches[0].flight_number} - ${
+      specialLaunches[specialLaunches.length - 1].flight_number
+    }`;
+    numbers.innerHTML = string;
   }
   function createArrowUp() {
     const tableElem = document.getElementById("sort");
@@ -123,6 +162,7 @@
     tableElem.removeChild(arrow);
   }
   async function sortServer() {
+    showSort();
     if (desc == 1) {
       const alive = document.getElementById("arrowDown");
       if (alive) {
