@@ -5,7 +5,6 @@
 // Добавить клиентскую сортировку по клику на заголовок mission_name
 // добавить состояние загрузки - loading... +
 // добавить состояние ошибки - вывести пользователю +
-// сортировка готова проблема что я вынес launches в глобал
 //
 // заменить клиентскую сортировку серверной +
 // добавить порядок сортировки (order), показывать вверх-вниз стрелка +
@@ -46,43 +45,22 @@
   }
 
   // *****************************************
-  async function checkDesc() {}
+
   async function forward() {
     try {
       deleteRows();
       showLoading();
       position += 20;
-      if (desc == 1) {
-        specialLaunches = await getLaunches({
-          limit,
-          offset: position,
-          order: "asc",
-          sort: "mission_name",
-        });
-      } else {
-        if (desc == 0) {
-          specialLaunches = await getLaunches({
-            limit,
-            offset: position,
-            order: "desc",
-            sort: "mission_name",
-          });
-        }
-      }
-      if (desc == undefined) {
-        specialLaunches = await getLaunches({ limit, offset: position });
-        showNumbers(specialLaunches);
-      } else {
-        showSort();
-      }
+      await checkDesc();
       if (specialLaunches.length < limit) {
         buttonForward.setAttribute("disabled", "disabled");
       }
-      hideLoading();
       createTable(specialLaunches);
       buttonBack.removeAttribute("disabled");
     } catch (error) {
       showError(error);
+    } finally {
+      hideLoading();
     }
   }
 
@@ -91,48 +69,51 @@
       deleteRows();
       showLoading();
       position -= 20;
-      if (desc == 1) {
-        specialLaunches = await getLaunches({
-          limit,
-          offset: position,
-          order: "asc",
-          sort: "mission_name",
-        });
-      } else {
-        if (desc == 0) {
-          specialLaunches = await getLaunches({
-            limit,
-            offset: position,
-            order: "desc",
-            sort: "mission_name",
-          });
-        }
-      }
-      if (desc == undefined) {
-        specialLaunches = await getLaunches({ limit, offset: position });
-        showNumbers(specialLaunches);
-      } else {
-        showSort();
-      }
+      await checkDesc();
       if (position == 0) {
         buttonBack.setAttribute("disabled", "disabled");
       }
-      hideLoading();
       createTable(specialLaunches);
       buttonForward.removeAttribute("disabled");
     } catch (error) {
       showError(error);
+    } finally {
+      hideLoading();
     }
   }
-
+  async function checkDesc() {
+    if (desc == 1) {
+      specialLaunches = await getLaunches({
+        limit,
+        offset: position,
+        order: "asc",
+        sort: "mission_name",
+      });
+    } else {
+      if (desc == 0) {
+        specialLaunches = await getLaunches({
+          limit,
+          offset: position,
+          order: "desc",
+          sort: "mission_name",
+        });
+      }
+    }
+    if (desc == undefined) {
+      specialLaunches = await getLaunches({ limit, offset: position });
+      showNumbers(specialLaunches);
+    } else {
+      showSort();
+    }
+  }
   function showSort() {
     const numbers = document.getElementById("numbers");
-    let string = `sort by mission name`;
+    const string = `sort by mission name`;
     numbers.innerHTML = string;
   }
   function showNumbers(specialLaunches) {
     const numbers = document.getElementById("numbers");
-    let string = `${specialLaunches[0].flight_number} - ${
+    const string = `${specialLaunches[0].flight_number} - ${
       specialLaunches[specialLaunches.length - 1].flight_number
     }`;
     numbers.innerHTML = string;
@@ -179,10 +160,10 @@
         });
         createTable(launchesSortServer);
         createArrowUp();
-        hideLoading();
       } catch (error) {
-        hideLoading();
         showError(error);
+      } finally {
+        hideLoading();
       }
     } else {
       const alive = document.getElementById("arrowUp");
@@ -200,10 +181,10 @@
         });
         createTable(launchesSortServer);
         createArrowDown();
-        hideLoading();
       } catch (error) {
-        hideLoading();
         showError(error);
+      } finally {
+        hideLoading();
       }
     }
   }
@@ -214,7 +195,7 @@
   }
 
   function deleteRows() {
-    let table = document.getElementById("table");
+    const table = document.getElementById("table");
 
     for (let i = table.rows.length - 1; i > 0; i--) {
       let time = table.rows[i];
