@@ -1,23 +1,5 @@
-// Создай отдельный репозиторий для этого
-// Запросить список 20 запусков с сервера (SpaceX API, https://docs.spacexdata.com/#5fc4c846-c373-43df-a10a-e9faf80a8b0a)
-// и построить таблицу с полученными данными
-// -- launch_year, mission_name, rocket -> rocket_name, flight_number
-// Добавить клиентскую сортировку по клику на заголовок mission_name
-// добавить состояние загрузки - loading... +
-// добавить состояние ошибки - вывести пользователю +
-//
-// заменить клиентскую сортировку серверной +
-// добавить порядок сортировки (order), показывать вверх-вниз стрелка +
-// убрать стартбутон, кнопка бэк по умолчанию выкл (disabled), по клику вперед делать запрос, +
-// если запрос приходит с 0 элементами - откл вперед (значит элементов больше нет), но если нажать назад кнопка вперед снова активна +
-// вывести промежуток показываемых элементов между вперед назад (1-20 21-40) +
-
 (async function () {
   const limit = 20;
-  // const spaceXUrlSort =
-  //   "https://api.spacexdata.com/v3/launches?limit=20&sort=mission_name";
-  // let spaceXUrlOffset =
-  //   "https://api.spacexdata.com/v3/launches?limit=20&offset=";
   let launches;
   let position = 0;
   let specialLaunches;
@@ -82,40 +64,17 @@
     }
   }
   async function checkDesc() {
-    if (desc == 1) {
-      specialLaunches = await getLaunches({
-        limit,
-        offset: position,
-        order: "asc",
-        sort: "mission_name",
-      });
-    } else {
-      if (desc == 0) {
-        specialLaunches = await getLaunches({
-          limit,
-          offset: position,
-          order: "desc",
-          sort: "mission_name",
-        });
-      }
-    }
-    if (desc == undefined) {
-      specialLaunches = await getLaunches({ limit, offset: position });
-      showNumbers(specialLaunches);
-    } else {
-      showSort();
-    }
-  }
-  function showSort() {
-    const numbers = document.getElementById("numbers");
-    const string = `sort by mission name`;
-    numbers.innerHTML = string;
+    specialLaunches = await getLaunches({
+      limit,
+      offset: position,
+      sort: desc == undefined ? undefined : "mission_name",
+      order: desc == 1 ? "asc" : desc == undefined ? undefined : "desc",
+    });
+    showNumbers(specialLaunches);
   }
   function showNumbers(specialLaunches) {
     const numbers = document.getElementById("numbers");
-    const string = `${specialLaunches[0].flight_number} - ${
-      specialLaunches[specialLaunches.length - 1].flight_number
-    }`;
+    const string = `${position + 1} - ${position + specialLaunches.length}`;
     numbers.innerHTML = string;
   }
   function createArrowUp() {
@@ -143,49 +102,39 @@
     tableElem.removeChild(arrow);
   }
   async function sortServer() {
-    showSort();
     if (desc == 1) {
       const alive = document.getElementById("arrowDown");
       if (alive) {
         deleteArrowDown();
       }
+      createArrowUp();
       desc = 0;
-      deleteRows();
-      showLoading();
-      try {
-        let launchesSortServer = await getLaunches({
-          limit,
-          sort: "mission_name",
-          order: "desc",
-        });
-        createTable(launchesSortServer);
-        createArrowUp();
-      } catch (error) {
-        showError(error);
-      } finally {
-        hideLoading();
-      }
+      await logicSortServer();
     } else {
       const alive = document.getElementById("arrowUp");
       if (alive) {
         deleteArrowUp();
       }
+      createArrowDown();
       desc = 1;
-      deleteRows();
-      showLoading();
-      try {
-        let launchesSortServer = await getLaunches({
-          limit,
-          sort: "mission_name",
-          order: "asc",
-        });
-        createTable(launchesSortServer);
-        createArrowDown();
-      } catch (error) {
-        showError(error);
-      } finally {
-        hideLoading();
-      }
+      await logicSortServer();
+    }
+  }
+  async function logicSortServer() {
+    deleteRows();
+    showLoading();
+    try {
+      let launchesSortServer = await getLaunches({
+        limit,
+        sort: "mission_name",
+        order: desc == 0 ? "desc" : "asc",
+        offset: position,
+      });
+      createTable(launchesSortServer);
+    } catch (error) {
+      showError(error);
+    } finally {
+      hideLoading();
     }
   }
   function createTable(launches) {
@@ -221,7 +170,11 @@
 
   async function getLaunches(params) {
     const spaceXUrl = "https://api.spacexdata.com/v3/launches";
-
+    for (let key in params) {
+      if (params[key] == undefined) {
+        delete params[key];
+      }
+    }
     const result = await fetch(
       `${spaceXUrl}?${new URLSearchParams(Object.entries(params))}`
     );
