@@ -5,12 +5,11 @@
   let specialLaunches;
   let desc;
 
-  let columnHeader = document.getElementById("sort");
-  columnHeader.addEventListener("click", sortServer);
+  let sortColumn = document.getElementById("missionName");
+  sortColumn.addEventListener("click", sort);
 
   let buttonBack = document.getElementById("back");
   buttonBack.addEventListener("click", back);
-  buttonBack.setAttribute("disabled", "disabled");
 
   let buttonForward = document.getElementById("forward");
   buttonForward.addEventListener("click", forward);
@@ -18,8 +17,8 @@
   showLoading();
   try {
     launches = await getLaunches({ limit });
-    createTable(launches);
-    showNumbers(launches);
+    fillTable(launches);
+    setPagination(launches);
   } catch (error) {
     showError(error);
   } finally {
@@ -29,98 +28,91 @@
   // *****************************************
 
   async function forward() {
-    try {
-      deleteRows();
-      showLoading();
-      position += 20;
-      await checkDesc();
-      if (specialLaunches.length < limit) {
-        buttonForward.setAttribute("disabled", "disabled");
-      }
-      createTable(specialLaunches);
-      buttonBack.removeAttribute("disabled");
-    } catch (error) {
-      showError(error);
-    } finally {
-      hideLoading();
+    position += 20;
+    await paginate();
+    if (specialLaunches.length < limit) {
+      buttonForward.setAttribute("disabled", "disabled");
     }
+    buttonBack.removeAttribute("disabled");
   }
 
   async function back() {
+    position -= 20;
+    await paginate();
+    if (position == 0) {
+      buttonBack.setAttribute("disabled", "disabled");
+    }
+    buttonForward.removeAttribute("disabled");
+  }
+  async function paginate() {
     try {
       deleteRows();
       showLoading();
-      position -= 20;
-      await checkDesc();
-      if (position == 0) {
-        buttonBack.setAttribute("disabled", "disabled");
-      }
-      createTable(specialLaunches);
-      buttonForward.removeAttribute("disabled");
+      specialLaunches = await getLaunches({
+        limit,
+        offset: position,
+        sort: desc == undefined ? undefined : "mission_name",
+        order: desc == 1 ? "asc" : desc == undefined ? undefined : "desc",
+      });
+      setPagination(specialLaunches);
+      fillTable(specialLaunches);
     } catch (error) {
       showError(error);
     } finally {
       hideLoading();
     }
   }
-  async function checkDesc() {
-    specialLaunches = await getLaunches({
-      limit,
-      offset: position,
-      sort: desc == undefined ? undefined : "mission_name",
-      order: desc == 1 ? "asc" : desc == undefined ? undefined : "desc",
-    });
-    showNumbers(specialLaunches);
-  }
-  function showNumbers(specialLaunches) {
+  function setPagination(specialLaunches) {
     const numbers = document.getElementById("numbers");
     const string = `${position + 1} - ${position + specialLaunches.length}`;
     numbers.innerHTML = string;
   }
   function createArrowUp() {
-    const tableElem = document.getElementById("sort");
     const arrow = document.createElement("p");
     arrow.setAttribute("id", "arrowUp");
     arrow.innerHTML = "&uarr;";
-    tableElem.append(arrow);
+    createSortArrow(arrow);
   }
   function createArrowDown() {
-    const tableElem = document.getElementById("sort");
     const arrow = document.createElement("p");
     arrow.setAttribute("id", "arrowDown");
     arrow.innerHTML = "&darr;";
-    tableElem.append(arrow);
+    createSortArrow(arrow);
+  }
+  function createSortArrow(arrowEl) {
+    const tableElem = document.getElementById("missionName");
+    tableElem.append(arrowEl);
   }
   function deleteArrowUp() {
-    const tableElem = document.getElementById("sort");
-    const arrow = document.getElementById("arrowUp");
-    tableElem.removeChild(arrow);
+    deleteSortArrow(document.getElementById("arrowUp"));
   }
   function deleteArrowDown() {
-    const tableElem = document.getElementById("sort");
-    const arrow = document.getElementById("arrowDown");
-    tableElem.removeChild(arrow);
+    deleteSortArrow(document.getElementById("arrowDown"));
   }
-  async function sortServer() {
+  function deleteSortArrow(arrowEl) {
+    const tableElem = document.getElementById("missionName");
+    tableElem.removeChild(arrowEl);
+  }
+  async function sort() {
     if (desc == 1) {
-      const alive = document.getElementById("arrowDown");
-      if (alive) {
+      const isActiveSort = document.getElementById("arrowDown");
+      if (isActiveSort) {
         deleteArrowDown();
       }
       createArrowUp();
       desc = 0;
-      await logicSortServer();
+      await sortRequest();
     } else {
-      const alive = document.getElementById("arrowUp");
-      if (alive) {
+      const isActiveSort = document.getElementById("arrowUp");
+      if (isActiveSort) {
         deleteArrowUp();
       }
       createArrowDown();
       desc = 1;
-      await logicSortServer();
+      await sortRequest();
     }
   }
-  async function logicSortServer() {
+  async function sortRequest() {
     deleteRows();
     showLoading();
     try {
@@ -130,30 +122,31 @@
         order: desc == 0 ? "desc" : "asc",
         offset: position,
       });
-      createTable(launchesSortServer);
+      fillTable(launchesSortServer);
     } catch (error) {
       showError(error);
     } finally {
       hideLoading();
     }
   }
-  function createTable(launches) {
+  function fillTable(launches) {
     for (let i = 0; i < launches.length; i++) {
       addLaunch(launches[i]);
     }
   }
 
   function deleteRows() {
-    const table = document.getElementById("table");
+    const table = document.getElementsByClassName("table");
 
-    for (let i = table.rows.length - 1; i > 0; i--) {
-      let time = table.rows[i];
-      table.removeChild(time);
+    for (let i = table[0].rows.length - 1; i > 0; i--) {
+      let time = table[0].rows[i];
+      table[0].removeChild(time);
     }
   }
 
   function showError(error) {
     alert("Error!\n" + error);
+    console.log(error);
   }
 
   function showLoading() {
@@ -182,9 +175,9 @@
   }
 
   function addLaunch(launch) {
-    const tableElem = document.getElementById("table");
+    const table = document.getElementsByClassName("table");
     const newRow = document.createElement("tr");
-    tableElem.append(newRow);
+    table[0].append(newRow);
     const year = document.createElement("td");
     year.innerHTML = launch.launch_year;
     newRow.append(year);
